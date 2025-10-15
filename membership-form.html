@@ -22,14 +22,14 @@
         </div>
         <nav class="nav bg-white shadow-sm">
             <div class="nav-container max-w-7xl mx-auto flex justify-center items-center space-x-2 sm:space-x-4 p-4 overflow-x-auto whitespace-nowrap">
-            <a href="index.html" class="nav-tab text-purple-600 font-bold border-b-2 border-purple-600 px-3 py-2 rounded-md text-sm sm:text-base">Home</a>
-            <a href="membership-form.html" class="nav-tab text-gray-600 hover:text-purple-600 transition duration-300 px-3 py-2 rounded-md text-sm sm:text-base font-medium">Become a Member</a>
-            <a href="members.html" class="nav-tab text-gray-600 hover:text-purple-600 transition duration-300 px-3 py-2 rounded-md text-sm sm:text-base font-medium">Current Members</a>
-            <a href="committee.html" class="nav-tab text-gray-600 hover:text-purple-600 transition duration-300 px-3 py-2 rounded-md text-sm sm:text-base font-medium">Committee</a>
-            <a href="alumni-news.html" class="nav-tab text-gray-600 hover:text-purple-600 transition duration-300 px-3 py-2 rounded-md text-sm sm:text-base font-medium">Alumni News</a>
-            <a href="activities.html" class="nav-tab text-gray-600 hover:text-purple-600 transition duration-300 px-3 py-2 rounded-md text-sm sm:text-base font-medium">Activities</a>
-            <a href="upcoming-events.html" class="nav-tab text-gray-600 hover:text-purple-600 transition duration-300 px-3 py-2 rounded-md text-sm sm:text-base font-medium">Upcoming Events</a>
-            <a href="admin.html" class="nav-tab text-gray-600 hover:text-purple-600 transition duration-300 px-3 py-2 rounded-md text-sm sm:text-base font-medium">Admin</a>
+                <a href="index.html" class="nav-tab text-gray-600 hover:text-purple-600 transition duration-300 px-3 py-2 rounded-md text-sm sm:text-base font-medium">Home</a>
+                <a href="members.html" class="nav-tab text-gray-600 hover:text-purple-600 transition duration-300 px-3 py-2 rounded-md text-sm sm:text-base font-medium">Current Members</a>
+                <a href="membership-form.html" class="nav-tab text-purple-600 font-bold border-b-2 border-purple-600 px-3 py-2 rounded-md text-sm sm:text-base">Become a Member</a>
+                <a href="committee.html" class="nav-tab text-gray-600 hover:text-purple-600 transition duration-300 px-3 py-2 rounded-md text-sm sm:text-base font-medium">Committee</a>
+                <a href="alumni-news.html" class="nav-tab text-gray-600 hover:text-purple-600 transition duration-300 px-3 py-2 rounded-md text-sm sm:text-base font-medium">Alumni News</a>
+                <a href="activities.html" class="nav-tab text-gray-600 hover:text-purple-600 transition duration-300 px-3 py-2 rounded-md text-sm sm:text-base font-medium">Activities</a>
+                <a href="upcoming-events.html" class="nav-tab text-gray-600 hover:text-purple-600 transition duration-300 px-3 py-2 rounded-md text-sm sm:text-base font-medium">Upcoming Events</a>
+                <a href="admin.html" class="nav-tab admin-tab text-gray-600 hover:text-purple-600 transition duration-300 px-3 py-2 rounded-md text-sm sm:text-base">Admin</a>
             </div>
         </nav>
     </div>
@@ -212,6 +212,7 @@
                              <div>
                                 <label for="lastDegree" class="block text-sm font-medium text-gray-700">Last Degree (Optional)</label>
                                 <select id="lastDegree" class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500">
+                                    <option value="" selected>None</option>
                                     <option value="MSc">MSc</option>
                                     <option value="MPhil">MPhil</option>
                                     <option value="PhD">PhD</option>
@@ -335,7 +336,7 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxNf4eZO0D5aIoehOA8DssL1MiTtUK1UlELNn_iUmlqTa8GcmTKqF-V1I5tmQAFzm5N/exec';
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzFlEgY8zOYvmxHxeeMPD3IUncjTBa5orLHaaT6ttfqWxaflBcI0yYx_YHevFsUNM8KXw/exec';
 
     const form = document.getElementById('membership-form');
     const formContainer = document.getElementById('form-container');
