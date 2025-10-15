@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alumni Maps</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://unpkg.com/topojson@3"></script>
+<style>
+    body { 
+        margin: 0; 
+        padding: 0;
+        font-family: 'Inter', sans-serif;
+        background: white;
+    }
+    .map-tooltip {
+        position: absolute;
+        text-align: center;
+        padding: 12px;
+        font: 12px sans-serif;
+        background: white;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.2s;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        min-width: 180px;
+        z-index: 1000;
+    }
+    #maps-wrapper {
+        display: flex;
+        width: 99.5%;
+        height: 450px;
+        border: 3px solid #1778F2;
+        border-radius: 8px;
+        overflow: hidden;
+        background: white;
+    }
+    #world-map { 
+        flex: 3; 
+        background: #f9f9f9; 
+        border-right: 3px solid #1778F2; 
+        position: relative;
+    }
+    #bd-map { 
+        flex: 1; 
+        background: #f9f9f9; 
+        position: relative;
+    }
+    .location-label {
+        font-size: 10px;
+        fill: #1E3A8A;
+        font-weight: bold;
+        text-anchor: middle;
+        pointer-events: none;
+        background: rgba(255,255,255,0.9);
+        padding: 2px 4px;
+        border-radius: 3px;
+    }
+    .member-marker {
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+    .member-marker:hover {
+        transform: scale(1.2);
+    }
+    .map-title {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: rgba(255,255,255,0.9);
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-weight: bold;
+        font-size: 14px;
+        z-index: 10;
+    }
+</style>
+</head>
+<body>
+
+<div id="maps-wrapper">
+    <div id="world-map">
+        <div class="map-title">Worldwide Alumni</div>
+    </div>
+    <div id="bd-map">
+        <div class="map-title">Bangladesh Alumni</div>
+    </div>
+</div>
+
+<script>
+// Get member data from localStorage
+const members = JSON.parse(localStorage.getItem('alumniData'))?.members || [];
+
+// City coordinates in N,E format (latitude, longitude) - easier to copy from Google Maps
+const cityCoordinates = {
+    // Bangladesh cities - [N, E] format
+    "Dhaka": [23.8103, 90.4125], 
+    "Chittagong": [22.34, 91.83], 
+    "Rajshahi": [24.37, 88.60], 
+    "Khulna": [22.82, 89.55], 
+    "Sylhet": [24.8917, 91.8833], 
+    "Rangpur": [25.7439, 89.2753],
+    "Barisal": [22.7010, 90.3535], 
+    "Mymensingh": [24.7471, 90.4203], 
+    "Comilla": [23.4686, 91.1783],
+    "Narayanganj": [23.62, 90.5], 
+    "Gazipur": [23.99, 90.42], 
+    "Bogra": [24.85, 89.37],
+    "Tangail": [24.25, 89.92], 
+    "Pabna": [24.0, 89.24], 
+    "Jessore": [23.17, 89.21],
+    "Cox's Bazar": [21.4272, 91.9882], 
+    "Dinajpur": [25.6333, 88.6333],
+    "Sirajganj": [24.45, 89.71],
+    "Faridpur": [23.60, 89.84],
+    "Jamalpur": [24.92, 89.94],
+    
+    // International cities - [N, E] format
+    "New York": [40.7128, -74.0060], 
+    "London": [51.5074, -0.1278], 
+    "Paris": [48.8566, 2.3522], 
+    "Tokyo": [35.6895, 139.6917], 
+    "Sydney": [-33.8688, 151.2093], 
+    "Dubai": [25.2769, 55.2962],
+    "Singapore": [1.3521, 103.8198], 
+    "Toronto": [43.6532, -79.3832], 
+    "Los Angeles": [34.0522, -118.2437],
+    "Chicago": [41.8781, -87.6298], 
+    "Berlin": [52.5200, 13.4050], 
+    "Mumbai": [19.0760, 72.8777],
+    "Kuala Lumpur": [3.1390, 101.6869], 
+    "Seoul": [37.5665, 126.9780], 
+    "Hong Kong": [22.3193, 114.1694],
+    "San Francisco": [37.7749, -122.4194],
+    "Boston": [42.3601, -71.0589],
+    "Washington D.C.": [38.9072, -77.0369],
+    "Melbourne": [-37.8136, 144.9631],
+    "Vancouver": [49.2827, -123.1207]
+};
+
+// Process member locations
+const memberLocations = [];
+const bdMemberLocations = [];
+
+members.forEach(member => {
+    let city = member.professionalInfo?.workCity || member.mailingAddress?.subDistrict || member.mailingAddress?.city;
+    let country = member.professionalInfo?.workCountry || member.mailingAddress?.district || member.mailingAddress?.division;
+    
+    if(city && cityCoordinates[city]) {
+        // Convert from [N, E] to [E, N] for D3.js (longitude, latitude)
+        const coordinates = [cityCoordinates[city][1], cityCoordinates[city][0]];
+        const loc = {
+            coordinates: coordinates,
+            member: member,
+            locationQuery: `${city}, ${country}`,
+            isBangladesh: false
+        };
+        
+        // Check if within Bangladesh bounds
+        if(coordinates[0] >= 88 && coordinates[0] <= 93 &&
+           coordinates[1] >= 20.5 && coordinates[1] <= 26.5) {
+            loc.isBangladesh = true;
+            bdMemberLocations.push(loc);
+        }
+        memberLocations.push(loc);
+    }
+});
+
+function drawMap(containerId, projectionType, data) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+
+    const svg = d3.select(container).append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .style("overflow", "hidden");
+
+    const tooltip = d3.select("body").append("div")
+        .attr("class", "map-tooltip");
+
+    d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json").then(world => {
+        const countries = topojson.feature(world, world.objects.countries).features;
+
+        let projection;
+        if(projectionType === 'world') {
+            projection = d3.geoMercator()
+                .scale(width / 2.5 / Math.PI)
+                .translate([width / 2, height / 2 + 40]);
+        } else {
+            // Bangladesh map - properly centered and zoomed
+            projection = d3.geoMercator()
+                .center([90.4, 23.7])
+                .scale(3500)
+                .translate([width / 2, height / 2]);
+        }
+
+        const path = d3.geoPath().projection(projection);
+
+        // Draw countries
+        svg.append("g")
+            .selectAll("path")
+            .data(countries)
+            .enter().append("path")
+            .attr("d", path)
+            .attr("fill", "#BFDBFE")
+            .attr("stroke", "#FFF")
+            .attr("stroke-width", 0.5);
+
+        // Draw member markers
+        const markers = svg.selectAll(".member-marker")
+            .data(data)
+            .enter().append("g")
+            .attr("class", "member-marker")
+            .attr("transform", d => `translate(${projection(d.coordinates)[0]}, ${projection(d.coordinates)[1]})`);
+
+        // Add profile images
+        markers.append("foreignObject")
+            .attr("x", -14)
+            .attr("y", -14)
+            .attr("width", 28)
+            .attr("height", 28)
+            .html(d => `
+                <img src="${d.member.photoUrl || 'https://placehold.co/28x28/e2e8f0/718096?text=A'}" 
+                     style="width: 28px; height: 28px; border-radius: 50%; border: 2px solid #8B5CF6; object-fit: cover; background: white;">
+            `);
+
+        // Add location labels ONLY for international locations (not Bangladesh)
+        markers.filter(d => !d.isBangladesh)
+            .append("text")
+            .attr("y", -18)
+            .attr("text-anchor", "middle")
+            .text(d => d.member.professionalInfo?.workCity || d.member.mailingAddress?.city || '')
+            .attr("class", "location-label");
+
+        // Add interactivity
+        markers.on("mouseover", function(event, d) {
+            tooltip.transition().duration(200).style("opacity", 0.9);
+            tooltip.html(`
+                <div style="text-align: left;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                        <img src="${d.member.photoUrl || 'https://placehold.co/40x40/e2e8f0/718096?text=A'}" 
+                             style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+                        <div>
+                            <p style="font-weight: bold; margin: 0; font-size: 14px;">${d.member.fullName}</p>
+                            <p style="color: #666; margin: 0; font-size: 11px;">${d.member.professionalInfo?.role || 'Alumni Member'}</p>
+                        </div>
+                    </div>
+                    <p style="margin: 4px 0; font-size: 12px;"><strong>Location:</strong> ${d.locationQuery}</p>
+                    <p style="margin: 4px 0; font-size: 12px;"><strong>Batch:</strong> ${d.member.batch || 'N/A'}</p>
+                    <p style="margin: 4px 0; font-size: 12px; color: #8B5CF6;">Click to view on Google Maps</p>
+                </div>
+            `)
+            .style("left", (event.pageX + 15) + "px")
+            .style("top", (event.pageY - 15) + "px");
+        })
+        .on("mouseout", function() {
+            tooltip.transition().duration(500).style("opacity", 0);
+        })
+        .on("click", function(event, d) {
+            window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(d.locationQuery)}`, '_blank');
+        });
+    }).catch(error => {
+        console.error('Error loading map data:', error);
+        container.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #666;">Error loading map. Please check your internet connection.</div>';
+    });
+}
+
+// Initialize maps
+drawMap('world-map', 'world', memberLocations);
+drawMap('bd-map', 'bangladesh', bdMemberLocations);
+
+// Handle window resize
+window.addEventListener('resize', () => {
+    drawMap('world-map', 'world', memberLocations);
+    drawMap('bd-map', 'bangladesh', bdMemberLocations);
+});
+</script>
+
+</body>
+</html>
