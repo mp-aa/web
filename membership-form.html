@@ -590,7 +590,7 @@ document.addEventListener('DOMContentLoaded', function () {
         localStorage.setItem('alumniData', JSON.stringify(alumniData));
 
         // Then, send the email
-        if (WEB_APP_URL && WEB_APP_URL !== 'https://script.google.com/macros/s/AKfycbyMtxTdnWL_CgjkorNr3R9T7SgYPDf0xIjyn0RXlRe2g4zm1zOwfI_T8Yi5L53eSHYv3g/exec') {
+        if (WEB_APP_URL && WEB_APP_URL !== " ") {
             fetch(WEB_APP_URL, {
                 method: 'POST',
                 body: JSON.stringify(newMember)
@@ -609,4 +609,5 @@ document.addEventListener('DOMContentLoaded', function () {
 
 </body>
 </html>
+
 
